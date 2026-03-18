@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vitals Mixer v1.0</title>
+
+  <!-- ═══ PWA / STEALTH MODE ═══ -->
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- iOS standalone mode — removes Safari chrome -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="VitalsMixer" />
+
+  <!-- iOS home screen icons -->
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png" />
+
+  <!-- Theme color (colors the browser UI on Android, status bar tint on iOS) -->
+  <meta name="theme-color" content="#161619" />
+
+  <!-- Standard favicon fallback -->
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <!-- ═══════════════════════ -->
+
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Share+Tech+Mono&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:         #0d0d0f;
+      --panel:      #161619;
+      --panel2:     #1c1c20;
+      --rail:       #222228;
+      --border:     #2e2e38;
+      --border-hi:  #44444f;
+      --accent:     #00d9c8;
+      --amber:      #ffaa00;
+      --red:        #ff3b30;
+      --orange:     #ff6b35;
+      --green:      #39d98a;
+      --text:       #d8d8e0;
+      --muted:      #5a5a6e;
+      --dim:        #38383f;
+      --screw:      #2a2a32;
+      --font-display: 'Oswald', sans-serif;
+      --font-mono:    'Share Tech Mono', monospace;
+      --font-body:    'DM Sans', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      background-image: url("data:image/svg+xml,%3Csvg width='4' height='4' viewBox='0 0 4 4' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='1' height='1' fill='rgba(255,255,255,0.012)'/%3E%3C/svg%3E");
+    }
+
+    .app-wrap {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 32px 16px 100px;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .header-brand {
+      font-family: var(--font-display);
+      font-size: clamp(30px, 7vw, 48px);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #fff;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+    .header-brand em { font-style: normal; color: var(--accent); }
+    .header-sub {
+      margin-top: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .header-badge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(0,217,200,0.07);
+      border: 1px solid rgba(0,217,200,0.2);
+      border-radius: 6px;
+      padding: 7px 13px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+    }
+    .badge-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+      animation: breathe 2.5s ease-in-out infinite;
+    }
+    @keyframes breathe {
+      0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--accent); }
+      50%       { opacity: 0.5; box-shadow: 0 0 2px var(--accent); }
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 18px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.4);
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--rail);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .panel-title em { font-style: normal; color: var(--accent); }
+    .panel-body { padding: 20px; }
+    .screw {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, var(--border-hi), var(--screw));
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .panel-screws {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 14px 0;
+    }
+
+    /* ══════════════════════════════════════════
+       PHASE 3 — ALERT SYSTEM
+    ══════════════════════════════════════════ */
+
+    /* Master alarm bar — shown when any critical alert is active */
+    #masterAlarmBar {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      background: rgba(255,59,48,0.08);
+      border: 1px solid rgba(255,59,48,0.35);
+      border-radius: 10px;
+      margin-bottom: 18px;
+      animation: alarmPulse 2s ease-in-out infinite;
+    }
+    #masterAlarmBar.visible { display: flex; }
+    @keyframes alarmPulse {
+      0%, 100% { border-color: rgba(255,59,48,0.35); background: rgba(255,59,48,0.08); }
+      50%       { border-color: rgba(255,59,48,0.6);  background: rgba(255,59,48,0.13); }
+    }
+    .alarm-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+      animation: iconBlink 1.2s step-end infinite;
+    }
+    @keyframes iconBlink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+    .alarm-bar-text {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--red);
+      line-height: 1.5;
+    }
+
+    /* Alert panel header can show an alert count badge */
+    .alert-count-badge {
+      display: none;
+      background: var(--red);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      letter-spacing: 0.05em;
+    }
+    .alert-count-badge.visible { display: inline-block; }
+
+    /* Alert cards list */
+    #alertList {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .alert-card {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 14px 16px;
+      border-radius: 8px;
+      border: 1px solid;
+      animation: alertSlideIn 0.3s ease;
+    }
+    @keyframes alertSlideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Severity levels */
+    .alert-card.critical {
+      background: rgba(255,59,48,0.07);
+      border-color: rgba(255,59,48,0.3);
+    }
+    .alert-card.warning {
+      background: rgba(255,107,53,0.07);
+      border-color: rgba(255,107,53,0.28);
+    }
+    .alert-card.advisory {
+      background: rgba(255,170,0,0.06);
+      border-color: rgba(255,170,0,0.25);
+    }
+    .alert-card.clear {
+      background: rgba(57,217,138,0.05);
+      border-color: rgba(57,217,138,0.2);
+    }
+
+    .alert-pip {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+    .alert-card.critical .alert-pip { background: var(--red);    box-shadow: 0 0 6px var(--red);    animation: critPip 1s step-end infinite; }
+    .alert-card.warning  .alert-pip { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+    .alert-card.advisory .alert-pip { background: var(--amber);  box-shadow: 0 0 4px var(--amber); }
+    .alert-card.clear    .alert-pip { background: var(--green);  box-shadow: 0 0 4px var(--green); }
+    @keyframes critPip {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.2; }
+    }
+
+    .alert-body { flex: 1; }
+    .alert-title {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .alert-card.critical .alert-title { color: var(--red); }
+    .alert-card.warning  .alert-title { color: var(--orange); }
+    .alert-card.advisory .alert-title { color: var(--amber); }
+    .alert-card.clear    .alert-title { color: var(--green); }
+
+    .alert-msg {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text);
+      margin-top: 5px;
+      line-height: 1.7;
+      letter-spacing: 0.04em;
+    }
+    .alert-meta {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: 0.08em;
+    }
+
+    /* NSAID countdown badge */
+    .nsaid-countdown {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,107,53,0.1);
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--orange);
+      letter-spacing: 0.08em;
+      margin-top: 8px;
+    }
+    .nsaid-clock { animation: tickTock 1s step-end infinite; }
+    @keyframes tickTock { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    /* All-clear card */
+    .all-clear {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      background: rgba(57,217,138,0.05);
+      border: 1px solid rgba(57,217,138,0.18);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--green);
+      letter-spacing: 0.1em;
+    }
+    .all-clear-icon { font-size: 18px; }
+
+    /* ── BP MONITOR ── */
+    .bp-monitor {
+      background: #0a0a0c;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px 20px;
+      box-shadow: inset 0 0 30px rgba(0,217,200,0.04), inset 0 0 2px rgba(0,217,200,0.08);
+    }
+    .monitor-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+    .bp-fields-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 440px) {
+      .bp-fields-row { grid-template-columns: 1fr 1fr; }
+      .bp-fields-row .hr-col { grid-column: span 2; }
+    }
+    .bp-field { display: flex; flex-direction: column; gap: 6px; }
+    .bp-field-lbl {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+    }
+    .bp-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border-hi);
+      padding: 8px 4px;
+      font-family: var(--font-mono);
+      font-size: 28px;
+      color: var(--accent);
+      width: 100%;
+      text-align: center;
+      outline: none;
+      -moz-appearance: textfield;
+      transition: color 0.15s, border-color 0.15s, text-shadow 0.15s;
+    }
+    .bp-input::-webkit-inner-spin-button,
+    .bp-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .bp-input:focus { color: #fff; border-color: var(--accent); text-shadow: 0 0 12px rgba(0,217,200,0.6); }
+    .bp-input::placeholder { color: var(--dim); font-size: 22px; }
+    .bp-field-unit { font-family: var(--font-mono); font-size: 9px; color: var(--muted); text-align: center; letter-spacing: 0.1em; }
+    .bp-readout-strip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: rgba(0,217,200,0.04);
+      border: 1px solid rgba(0,217,200,0.1);
+      border-radius: 6px;
+      flex-wrap: wrap;
+    }
+    .readout-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; color: var(--muted); }
+    .readout-val { font-family: var(--font-mono); font-size: 18px; color: var(--accent); text-shadow: 0 0 10px rgba(0,217,200,0.4); flex: 1; }
+    .bp-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      padding: 3px 10px;
+      border-radius: 4px;
+    }
+    .bp-tag.normal  { background: rgba(57,217,138,0.12); color: var(--green); border: 1px solid rgba(57,217,138,0.25); }
+    .bp-tag.target  { background: rgba(0,217,200,0.1);   color: var(--accent); border: 1px solid rgba(0,217,200,0.25); }
+    .bp-tag.high    { background: rgba(255,59,48,0.1);   color: var(--red); border: 1px solid rgba(255,59,48,0.25); }
+    .bp-tag.empty   { background: rgba(90,90,110,0.1);  color: var(--muted); border: 1px solid var(--border); }
+
+    /* ── CHANNEL STRIP ── */
+    .channel-strip-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    .channel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 16px;
+    }
+    .channel + .channel { border-left: 1px solid var(--border); }
+    .ch-label {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .ch-display {
+      background: #050508;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 18px 4px;
+      margin-bottom: 16px;
+      text-align: center;
+      box-shadow: inset 0 0 14px rgba(0,0,0,0.5);
+      min-width: 90px;
+    }
+    .ch-display-val {
+      font-family: var(--font-mono);
+      font-size: 32px;
+      line-height: 1;
+      color: var(--amber);
+      text-shadow: 0 0 14px rgba(255,170,0,0.5);
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+    .ch-display-lbl {
+      font-family: var(--font-mono);
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 3px;
+      min-height: 12px;
+    }
+    .fader-track-wrap {
+      position: relative;
+      width: 44px;
+      height: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .fader-rail {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 0; bottom: 0;
+      width: 6px;
+      border-radius: 3px;
+      background: var(--dim);
+      pointer-events: none;
+    }
+    .fader-ticks { position: absolute; right: -16px; top: 0; bottom: 0; width: 10px; pointer-events: none; }
+    .fader-tick { position: absolute; right: 0; width: 6px; height: 1px; background: var(--border-hi); }
+    .fader-tick.major { width: 10px; background: var(--muted); }
+    .fader-input {
+      position: absolute;
+      width: 200px;
+      height: 44px;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%) rotate(-90deg);
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      outline: none;
+      cursor: pointer;
+      z-index: 2;
+    }
+    .fader-input::-webkit-slider-runnable-track { background: transparent; height: 6px; }
+    .fader-input::-moz-range-track { background: transparent; height: 6px; }
+    .fader-input::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 44px; height: 18px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #4a4a56 0%, #2e2e38 40%, #25252e 60%, #3a3a46 100%);
+      border: 1px solid var(--border-hi);
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12), 0 2px 8px rgba(0,0,0,0.5);
+      cursor: grab;
+    }
+    .fader-input:active::-webkit-slider-thumb { cursor: grabbing; }
+    .fader-input::-moz-range-thumb {
+      width: 44px; height: 18px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #4a4a56 0%, #2e2e38 50%, #3a3a46 100%);
+      border: 1px solid var(--border-hi);
+      cursor: grab;
+    }
+    .fader-scale { display: flex; justify-content: space-between; width: 100%; margin-top: 10px; }
+    .fader-scale-lbl { font-family: var(--font-mono); font-size: 8px; color: var(--muted); text-align: center; max-width: 44px; line-height: 1.3; }
+
+    /* ── NOCTURIA ── */
+    .nocturia-strip {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .nocturia-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+    .trip-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .trip-btn {
+      width: 38px; height: 38px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.12s;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .trip-btn:active { transform: scale(0.93); }
+    .trip-btn.active {
+      border-color: var(--amber);
+      background: rgba(255,170,0,0.1);
+      color: var(--amber);
+      box-shadow: 0 0 8px rgba(255,170,0,0.2), inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* ── RESCUE WARNING LIGHT ── */
+    .rescue-section {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .warning-light-btn {
+      position: relative;
+      width: 72px; height: 72px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: var(--panel2);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.06), inset 0 -2px 0 rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.4);
+    }
+    .warning-light-btn:active { transform: translateY(1px); }
+    .warning-led {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.15), var(--dim) 70%);
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+    .warning-light-btn.active { border-color: var(--orange); background: rgba(255,107,53,0.08); box-shadow: inset 0 2px 0 rgba(255,255,255,0.06), 0 0 20px rgba(255,107,53,0.35), 0 0 40px rgba(255,107,53,0.15), 0 4px 12px rgba(0,0,0,0.4); }
+    .warning-light-btn.active .warning-led { background: radial-gradient(circle at 35% 30%, #fff 0%, var(--orange) 40%, #cc3300 100%); border-color: var(--orange); box-shadow: 0 0 10px rgba(255,107,53,0.8), 0 0 24px rgba(255,107,53,0.4), inset 0 1px 2px rgba(255,255,255,0.4); animation: strobe 1.4s ease-in-out infinite; }
+    @keyframes strobe {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px rgba(255,107,53,0.8), 0 0 24px rgba(255,107,53,0.4); }
+      50%       { opacity: 0.7; box-shadow: 0 0 6px rgba(255,107,53,0.5), 0 0 12px rgba(255,107,53,0.2); }
+    }
+    .rescue-info { flex: 1; }
+    .rescue-name { font-family: var(--font-display); font-size: 16px; font-weight: 600; letter-spacing: 0.05em; color: var(--text); text-transform: uppercase; }
+    .rescue-status { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-top: 5px; transition: color 0.2s; }
+    .rescue-status.active { color: var(--orange); }
+    .rescue-warning { display: none; margin-top: 12px; padding: 10px 14px; background: rgba(255,107,53,0.07); border: 1px solid rgba(255,107,53,0.25); border-radius: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; color: var(--orange); line-height: 1.6; }
+
+    /* ── SUBMIT ── */
+    .submit-btn {
+      width: 100%;
+      padding: 18px;
+      background: var(--rail);
+      border: 1px solid var(--border-hi);
+      border-radius: 10px;
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 4px 16px rgba(0,0,0,0.3);
+    }
+    .submit-btn:hover { background: var(--panel2); border-color: var(--accent); color: var(--accent); box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 0 16px rgba(0,217,200,0.15), 0 4px 16px rgba(0,0,0,0.3); }
+    .submit-btn:active { transform: translateY(1px); }
+
+    /* ── DATA ENGINE ── */
+    .status-row { display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 18px; }
+    .status-cell { flex: 1; padding: 14px 16px; text-align: center; border-right: 1px solid var(--border); }
+    .status-cell:last-child { border-right: none; }
+    .status-val { font-family: var(--font-mono); font-size: 22px; color: var(--green); }
+    .status-val.dim { color: var(--muted); font-size: 13px; }
+    .status-lbl { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+    .section-lbl { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+    .divider { height: 1px; background: var(--border); margin: 18px 0; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 18px; border-radius: 7px;
+      font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
+      cursor: pointer; border: 1px solid;
+      transition: all 0.14s; -webkit-tap-highlight-color: transparent;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-export { background: rgba(0,217,200,0.07); border-color: rgba(0,217,200,0.25); color: var(--accent); }
+    .btn-export:hover { background: rgba(0,217,200,0.13); border-color: var(--accent); }
+    .btn-import { background: rgba(57,217,138,0.06); border-color: rgba(57,217,138,0.22); color: var(--green); }
+    .btn-import:hover { background: rgba(57,217,138,0.13); border-color: var(--green); }
+    .btn-seed { background: rgba(90,90,110,0.1); border-color: var(--border); color: var(--muted); font-size: 10px; padding: 8px 14px; }
+    .btn-seed:hover { color: var(--text); border-color: var(--border-hi); }
+    .btn-clear { background: rgba(255,59,48,0.06); border-color: rgba(255,59,48,0.2); color: var(--red); font-size: 10px; padding: 8px 14px; }
+    .btn-clear:hover { background: rgba(255,59,48,0.12); border-color: var(--red); }
+    #importInput { display: none; }
+
+    /* ── LOG ── */
+    .log-wrap {
+      background: #070709;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      max-height: 260px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      line-height: 1.8;
+    }
+    .log-wrap::-webkit-scrollbar { width: 3px; }
+    .log-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .log-entry { display: grid; grid-template-columns: 120px 1fr; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .log-entry:last-child { border-bottom: none; }
+    .log-ts   { color: var(--muted); }
+    .log-data { color: var(--text); }
+    .log-data .hi   { color: var(--accent); }
+    .log-data .ok   { color: var(--green); }
+    .log-data .warn { color: var(--orange); }
+    .log-data .red  { color: var(--red); }
+    .log-empty { color: var(--muted); text-align: center; padding: 20px 0; font-size: 10px; letter-spacing: 0.1em; }
+
+    /* ── ROADMAP ── */
+    .rm-list { display: flex; flex-direction: column; }
+    .rm-item { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .rm-item:last-child { border-bottom: none; }
+    .rm-pip { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+    .rm-pip.done    { background: var(--green);  box-shadow: 0 0 6px var(--green); }
+    .rm-pip.active  { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .rm-pip.pending { background: var(--border); }
+    .rm-name { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.05em; color: var(--text); }
+    .rm-name.done   { color: var(--green); }
+    .rm-name.active { color: var(--accent); }
+    .rm-desc { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: 0.05em; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--rail);
+      border: 1px solid var(--border-hi);
+      border-radius: 8px;
+      padding: 11px 20px;
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--text);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 999; white-space: nowrap; pointer-events: none;
+      letter-spacing: 0.08em;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    #toast.show    { transform: translateX(-50%) translateY(0); }
+    #toast.success { border-color: rgba(57,217,138,0.4); color: var(--green); }
+    #toast.error   { border-color: rgba(255,59,48,0.4);  color: var(--red); }
+  </style>
+</head>
+<body>
+<div class="app-wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <div class="header-brand">Vitals<em>Mixer</em></div>
+      <div class="header-sub">BP · FLOW · PAIN &nbsp;/&nbsp; HEALTH CHANNEL STRIP</div>
+    </div>
+    <div class="header-badge">
+      <div class="badge-dot"></div>
+      PHASE 3 ACTIVE
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       PHASE 3 — ALERT LOGIC ENGINE
+  ════════════════════════════════════════ -->
+
+  <!-- Master alarm bar (critical only) -->
+  <div id="masterAlarmBar">
+    <div class="alarm-icon">⚠</div>
+    <div class="alarm-bar-text" id="masterAlarmText">CRITICAL ALERT ACTIVE</div>
+  </div>
+
+  <!-- Alert panel -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title"><em>ALERT LOGIC</em> — SIGNAL ANALYSIS</div>
+      <span class="alert-count-badge" id="alertCountBadge">0</span>
+    </div>
+    <div class="panel-body">
+      <div id="alertList">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       TRACK 1 — BP INPUT
+  ════════════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-screws"><div class="screw"></div><div class="screw"></div></div>
+    <div class="panel-header">
+      <div class="panel-title"><em>TRACK 1</em> — BLOOD PRESSURE OUTPUT</div>
+    </div>
+    <div class="panel-body">
+      <div class="bp-monitor">
+        <div class="monitor-label">◈ VITALS MONITOR — ENTER READINGS</div>
+        <div class="bp-fields-row">
+          <div class="bp-field">
+            <div class="bp-field-lbl">SYS</div>
+            <input class="bp-input" type="number" id="systolic" placeholder="120" min="60" max="220" inputmode="numeric" />
+            <div class="bp-field-unit">mmHg</div>
+          </div>
+          <div class="bp-field">
+            <div class="bp-field-lbl">DIA</div>
+            <input class="bp-input" type="number" id="diastolic" placeholder="80" min="40" max="140" inputmode="numeric" />
+            <div class="bp-field-unit">mmHg</div>
+          </div>
+          <div class="bp-field hr-col">
+            <div class="bp-field-lbl">PULSE</div>
+            <input class="bp-input" type="number" id="heartRate" placeholder="72" min="30" max="200" inputmode="numeric" />
+            <div class="bp-field-unit">BPM</div>
+          </div>
+        </div>
+        <div class="bp-readout-strip">
+          <span class="readout-lbl">OUTPUT</span>
+          <span class="readout-val" id="bpDisplay">— / —</span>
+          <span class="bp-tag empty" id="bpStatus">AWAITING INPUT</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       TRACKS 2 & 3 — CHANNEL FADERS
+  ════════════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-screws"><div class="screw"></div><div class="screw"></div></div>
+    <div class="panel-header">
+      <div class="panel-title"><em>TRACKS 2 & 3</em> — CHANNEL FADERS</div>
+    </div>
+
+    <div class="channel-strip-wrap">
+      <!-- FLOW -->
+      <div class="channel">
+        <div class="ch-label">FLOW</div>
+        <div class="ch-display">
+          <div class="ch-display-val" id="flowDisplay">2.0</div>
+          <div class="ch-display-lbl" id="flowDesc">SIG FAIL</div>
+        </div>
+        <div class="fader-track-wrap">
+          <div class="fader-rail" id="flowRail"></div>
+          <div class="fader-ticks" id="flowTicks"></div>
+          <input type="range" class="fader-input" id="flowSlider" min="2" max="10" value="2" step="1" oninput="onFlowChange(this.value)" />
+        </div>
+        <div class="fader-scale">
+          <div class="fader-scale-lbl" style="color:var(--red)">SIG<br>FAIL</div>
+          <div class="fader-scale-lbl" style="color:var(--green)">MASTER<br>QUAL</div>
+        </div>
+      </div>
+
+      <!-- PAIN -->
+      <div class="channel">
+        <div class="ch-label">PAIN</div>
+        <div class="ch-display">
+          <div class="ch-display-val" id="painDisplay">2.0</div>
+          <div class="ch-display-lbl" id="painDesc">CLEAR JT</div>
+        </div>
+        <div class="fader-track-wrap">
+          <div class="fader-rail" id="painRail"></div>
+          <div class="fader-ticks" id="painTicks"></div>
+          <input type="range" class="fader-input" id="painSlider" min="2" max="10" value="2" step="1" oninput="onPainChange(this.value)" />
+        </div>
+        <div class="fader-scale">
+          <div class="fader-scale-lbl" style="color:var(--green)">CLEAR<br>JT</div>
+          <div class="fader-scale-lbl" style="color:var(--red)">PEAK<br>INFL</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOCTURIA -->
+    <div class="nocturia-strip">
+      <div class="nocturia-lbl">NIGHT TRIPS</div>
+      <div class="trip-btns" id="tripRow"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       RESCUE WARNING LIGHT
+  ════════════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-screws"><div class="screw"></div><div class="screw"></div></div>
+    <div class="panel-header">
+      <div class="panel-title"><em>TRACK 3</em> — RESCUE MEDICATION</div>
+    </div>
+    <div class="rescue-section">
+      <button class="warning-light-btn" id="rescueBtn" onclick="toggleNSAID()" aria-pressed="false">
+        <div class="warning-led" id="warningLed"></div>
+      </button>
+      <div class="rescue-info">
+        <div class="rescue-name">Rescue Naproxen</div>
+        <div class="rescue-status" id="rescueStatus">TAP LIGHT TO ACTIVATE</div>
+        <div class="rescue-warning" id="nsaidWarning">
+          ⚑ &nbsp;NSAID FLAG ACTIVE<br>BP readings flagged for potential interference — next 48 hrs
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBMIT -->
+  <div style="margin-bottom:18px;">
+    <button class="submit-btn" onclick="submitCheckin()">▶ &nbsp; LOG THIS CHECK-IN</button>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       DATA ENGINE
+  ════════════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">DATA ENGINE — <em>STORAGE & BACKUP</em></div>
+    </div>
+    <div class="panel-body">
+      <div class="status-row">
+        <div class="status-cell">
+          <div class="status-val" id="entryCount">0</div>
+          <div class="status-lbl">CHECK-INS</div>
+        </div>
+        <div class="status-cell">
+          <div class="status-val dim" id="lastEntry">—</div>
+          <div class="status-lbl">LAST ENTRY</div>
+        </div>
+        <div class="status-cell">
+          <div class="status-val dim" id="storageSize">0 KB</div>
+          <div class="status-lbl">STORAGE</div>
+        </div>
+      </div>
+      <div class="section-lbl">BACKUP CONTROLS</div>
+      <div class="btn-row" style="margin-bottom:18px;">
+        <button class="btn btn-export" onclick="exportJSON()">↑ SHARE / EXPORT</button>
+        <button class="btn btn-import" onclick="document.getElementById('importInput').click()">↓ IMPORT</button>
+        <input type="file" id="importInput" accept=".json" onchange="importJSON(event)" />
+      </div>
+      <div class="section-lbl">DEVELOPER TOOLS</div>
+      <div class="btn-row">
+        <button class="btn btn-seed" onclick="seedSampleEntry()">+ SAMPLE ENTRY</button>
+        <button class="btn btn-clear" onclick="clearAllData()">⚠ CLEAR ALL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">RECENT CHECK-INS — <em>SESSION LOG</em></div>
+    </div>
+    <div class="panel-body" style="padding:14px;">
+      <div class="log-wrap" id="logWrap">
+        <div class="log-empty">NO ENTRIES — FILL CONSOLE ABOVE &amp; LOG CHECK-IN</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">DEVELOPMENT ROADMAP</div>
+    </div>
+    <div class="panel-body">
+      <div class="rm-list">
+        <div class="rm-item">
+          <div class="rm-pip done"></div>
+          <div>
+            <div class="rm-name done">PHASE 1 — DATA ENGINE ✓</div>
+            <div class="rm-desc">LocalStorage · JSON Export · Web Share API · Import/Merge</div>
+          </div>
+        </div>
+        <div class="rm-item">
+          <div class="rm-pip done"></div>
+          <div>
+            <div class="rm-name done">PHASE 2 — CHANNEL STRIP ✓</div>
+            <div class="rm-desc">BP Monitor · Vertical Faders · Warning Light · Nocturia</div>
+          </div>
+        </div>
+        <div class="rm-item">
+          <div class="rm-pip active"></div>
+          <div>
+            <div class="rm-name active">PHASE 3 — ALERT LOGIC ✓</div>
+            <div class="rm-desc">48hr NSAID flag · BP interference · Flow & pain thresholds · Trend detection</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end .app-wrap -->
+<div id="toast"></div>
+
+<script>
+  // ═══════════════════════════════════════════════════════════════════
+  //  CONSTANTS & STATE
+  // ═══════════════════════════════════════════════════════════════════
+  const STORAGE_KEY = 'vitalsMixer_v1_checkins';
+  let nsaidOn    = false;
+  let nightTrips = 0;
+
+  // ── Thresholds (your "New Normal" baseline) ────────────────────────
+  const THRESH = {
+    bp: {
+      normalSys: 120, normalDia: 80,   // ≤ = Normal
+      targetSys: 130, targetDia: 85,   // ≤ = Target range
+      // above target = Elevated / Critical
+    },
+    flow: {
+      critical:  3,   // ≤ = Critical signal failure
+      low:       5,   // ≤ = Low, worth noting
+      good:      7,   // ≥ = Good / no flag
+    },
+    pain: {
+      high:      7,   // ≥ = High pain, flag
+      critical:  9,   // ≥ = Acute/peak, critical
+    },
+    nocturia: {
+      flag:      2,   // ≥ = Notable night trips
+    },
+    nsaidWindow: 48,  // hours
+    trendWindow: 3,   // last N check-ins for trend
+  };
+
+  // ── Scale labels ───────────────────────────────────────────────────
+  const FLOW_SHORT = { 2:'SIG FAIL', 3:'CRIT LOW', 4:'LOW FLOW', 5:'MODERATE', 6:'FUNCT\'L', 7:'GOOD', 8:'STRONG', 9:'V STRONG', 10:'MASTER QLT' };
+  const PAIN_SHORT = { 2:'CLEAR JT', 3:'MILD ACHE', 4:'LOW PAIN', 5:'MODERATE', 6:'SIGNIF\'T', 7:'HIGH PAIN', 8:'SEVERE', 9:'ACUTE', 10:'PEAK INFL' };
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  PHASE 3 — ALERT LOGIC ENGINE
+  // ═══════════════════════════════════════════════════════════════════
+
+  /**
+   * Runs all alert rules against stored history + the current input
+   * values. Returns an array of alert objects sorted by severity.
+   *
+   * @param {Object|null} live  — live input values (null = use last saved)
+   * @param {Array}       history — full checkins array
+   * @returns {Array} alerts
+   */
+  function runAlertEngine(history, live = null) {
+    const alerts = [];
+    const now    = Date.now();
+    const MS48H  = THRESH.nsaidWindow * 60 * 60 * 1000;
+
+    // ── 1. NSAID 48-hour interference window ─────────────────────────
+    // Find the most recent NSAID dose in history
+    const nsaidEntries = history
+      .filter(e => e.pain_management && e.pain_management.nsaid_rescue_taken)
+      .map(e => new Date(e.timestamp).getTime())
+      .sort((a, b) => b - a);
+
+    const lastNsaidMs   = nsaidEntries.length ? nsaidEntries[0] : null;
+    const nsaidActive   = lastNsaidMs && (now - lastNsaidMs) < MS48H;
+    const nsaidHoursAgo = lastNsaidMs ? ((now - lastNsaidMs) / 3600000).toFixed(1) : null;
+    const nsaidHrsLeft  = nsaidActive ? (THRESH.nsaidWindow - (now - lastNsaidMs) / 3600000).toFixed(1) : null;
+
+    if (nsaidActive) {
+      alerts.push({
+        severity: 'warning',
+        title: 'NSAID INTERFERENCE WINDOW ACTIVE',
+        msg: `Naproxen taken ${nsaidHoursAgo}h ago. NSAIDs can elevate blood pressure by reducing the effectiveness of antihypertensive medications (especially ACE inhibitors and diuretics). BP readings during this window may be artificially elevated.`,
+        meta: `⚑ Window expires in ${nsaidHrsLeft}h  ·  Dose logged ${formatTimestamp(new Date(lastNsaidMs).toISOString())}`,
+        showCountdown: true,
+        hoursLeft: nsaidHrsLeft,
+      });
+    }
+
+    // ── 2. Evaluate the most recent check-in (or live input) ─────────
+    const latest = live || (history.length ? history[history.length - 1] : null);
+
+    if (latest) {
+      const bp   = latest.blood_pressure   || {};
+      const u    = latest.urinary_health   || {};
+      const p    = latest.pain_management  || {};
+      const sys  = bp.systolic;
+      const dia  = bp.diastolic;
+      const flow = u.flow_score;
+      const pain = p.knee_pain_level;
+
+      // ── BP check + NSAID compounding flag ──────────────────────────
+      if (sys && dia) {
+        if (sys > THRESH.bp.targetSys || dia > THRESH.bp.targetDia) {
+          const isCritical = sys > 150 || dia > 100;
+          const compounded = nsaidActive;
+          alerts.push({
+            severity: isCritical ? 'critical' : 'warning',
+            title: isCritical ? 'BLOOD PRESSURE CRITICAL' : 'BLOOD PRESSURE ELEVATED',
+            msg: isCritical
+              ? `Reading of ${sys}/${dia} mmHg is significantly above your target range of 120/80–130/85. Consult your care team if this persists.`
+              : `Reading of ${sys}/${dia} mmHg is above your target New Normal range (120/80–130/85).`,
+            meta: compounded
+              ? `⚑ POTENTIAL INTERFERENCE — NSAID active (${nsaidHrsLeft}h remaining). Naproxen may be contributing to this elevation. Do not adjust medications without consulting your doctor.`
+              : `Last reading within ${now - new Date(latest.timestamp).getTime() < 300000 ? 'the last 5 min' : formatTimestamp(latest.timestamp)}`,
+          });
+        } else if (sys <= THRESH.bp.normalSys && dia <= THRESH.bp.normalDia) {
+          if (nsaidActive) {
+            // Good BP but NSAID is active — still flag it informatively
+            alerts.push({
+              severity: 'advisory',
+              title: 'BP NORMAL — NSAID WINDOW ACTIVE',
+              msg: `BP ${sys}/${dia} is in normal range. Note that NSAID interference window is still active (${nsaidHrsLeft}h remaining). Current reading may reflect early window; monitor closely over next check-in.`,
+              meta: `New Normal baseline maintained ✓`,
+            });
+          }
+          // else: BP normal + no NSAID = no alert needed (handled by all-clear below)
+        }
+      }
+
+      // ── Flow check ─────────────────────────────────────────────────
+      if (flow !== undefined && flow !== null) {
+        if (flow <= THRESH.flow.critical) {
+          alerts.push({
+            severity: 'critical',
+            title: 'URINARY FLOW — SIGNAL FAILURE',
+            msg: `Flow score of ${flow}/10 indicates severe restriction. A critically low flow score is a systemic stress signal — this may reflect a BPH flare, medication side effect, or elevated systemic inflammation. Consider logging a BP reading immediately.`,
+            meta: `Flow threshold: critical ≤ ${THRESH.flow.critical}  ·  Your score: ${flow}`,
+          });
+        } else if (flow <= THRESH.flow.low) {
+          alerts.push({
+            severity: 'advisory',
+            title: 'URINARY FLOW — BELOW THRESHOLD',
+            msg: `Flow score of ${flow}/10 is below your functional baseline. Reduced flow can indicate early systemic stress or a BPH symptom increase. Compare with recent trend.`,
+            meta: `Flow threshold: advisory ≤ ${THRESH.flow.low}  ·  Your score: ${flow}`,
+          });
+        }
+      }
+
+      // ── Pain check ─────────────────────────────────────────────────
+      if (pain !== undefined && pain !== null) {
+        if (pain >= THRESH.pain.critical) {
+          alerts.push({
+            severity: 'critical',
+            title: 'KNEE PAIN — PEAK INFLAMMATION',
+            msg: `Pain level ${pain}/10 indicates near-locked joint status. At this level, NSAID rescue medication may feel necessary. If taken, this will activate the 48-hour BP interference flag.`,
+            meta: `Pain threshold: critical ≥ ${THRESH.pain.critical}  ·  Your score: ${pain}`,
+          });
+        } else if (pain >= THRESH.pain.high) {
+          alerts.push({
+            severity: 'warning',
+            title: 'KNEE PAIN — HIGH LEVEL',
+            msg: `Pain level ${pain}/10 is in the high zone. If you are considering rescue Naproxen, be aware this will flag your next 48 hours of BP readings for potential interference.`,
+            meta: `Pain threshold: warning ≥ ${THRESH.pain.high}  ·  Your score: ${pain}`,
+          });
+        }
+      }
+
+      // ── Nocturia check ─────────────────────────────────────────────
+      const trips = u.night_trips;
+      if (trips !== undefined && trips >= THRESH.nocturia.flag) {
+        alerts.push({
+          severity: 'advisory',
+          title: 'NOCTURIA — ELEVATED NIGHT TRIPS',
+          msg: `${trips} night trip${trips !== 1 ? 's' : ''} logged. Increased nocturia can indicate BPH symptom flare, fluid retention (a side effect of some BP meds), or disrupted overnight BP rhythm. Cross-reference with BP and flow trends.`,
+          meta: `Advisory threshold: ≥ ${THRESH.nocturia.flag} trips`,
+        });
+      }
+    }
+
+    // ── 3. TREND ANALYSIS — last N check-ins ─────────────────────────
+    if (history.length >= THRESH.trendWindow) {
+      const recent = history.slice(-THRESH.trendWindow);
+
+      // BP trend: is systolic rising across last 3 entries?
+      const bpTrend = recent
+        .map(e => e.blood_pressure && e.blood_pressure.systolic)
+        .filter(v => v !== null && v !== undefined);
+      if (bpTrend.length >= 3) {
+        const rising = bpTrend[2] > bpTrend[1] && bpTrend[1] > bpTrend[0];
+        const delta  = bpTrend[2] - bpTrend[0];
+        if (rising && delta >= 8) {
+          alerts.push({
+            severity: 'advisory',
+            title: 'BP TREND — RISING PATTERN DETECTED',
+            msg: `Systolic has risen ${delta} mmHg across your last 3 check-ins (${bpTrend[0]} → ${bpTrend[1]} → ${bpTrend[2]}). Even within the target range, a consistent upward trend warrants monitoring. Check for recent NSAID use, sodium intake, or increased pain levels.`,
+            meta: `Trend window: last ${THRESH.trendWindow} entries`,
+          });
+        }
+      }
+
+      // Flow trend: is flow declining?
+      const flowTrend = recent
+        .map(e => e.urinary_health && e.urinary_health.flow_score)
+        .filter(v => v !== null && v !== undefined);
+      if (flowTrend.length >= 3) {
+        const declining = flowTrend[2] < flowTrend[1] && flowTrend[1] < flowTrend[0];
+        const delta     = flowTrend[0] - flowTrend[2];
+        if (declining && delta >= 2) {
+          alerts.push({
+            severity: 'advisory',
+            title: 'FLOW TREND — DECLINING PATTERN',
+            msg: `Urinary flow has dropped ${delta} points across your last 3 check-ins (${flowTrend[0]} → ${flowTrend[1]} → ${flowTrend[2]}). A multi-session decline in flow is a meaningful systemic signal — it often precedes a BP variation. Monitor closely.`,
+            meta: `Trend window: last ${THRESH.trendWindow} entries`,
+          });
+        }
+      }
+    }
+
+    // ── 4. Cross-signal correlation ───────────────────────────────────
+    // If flow is low AND BP is elevated (same check-in) = compound stress flag
+    if (latest) {
+      const bp   = latest.blood_pressure  || {};
+      const u    = latest.urinary_health  || {};
+      const sys  = bp.systolic;
+      const dia  = bp.diastolic;
+      const flow = u.flow_score;
+      const alreadyFlaggedBP   = alerts.some(a => a.title.includes('BLOOD PRESSURE'));
+      const alreadyFlaggedFlow = alerts.some(a => a.title.includes('URINARY FLOW'));
+      if (alreadyFlaggedBP && alreadyFlaggedFlow) {
+        alerts.push({
+          severity: 'critical',
+          title: 'COMPOUND STRESS SIGNAL',
+          msg: `Both blood pressure (${sys}/${dia}) and urinary flow (${flow}/10) are simultaneously outside normal range. This combination is your key "interplay" indicator — elevated BP can restrict urinary flow, and BPH-related stress can elevate BP. Review your recent NSAID use and medication timing.`,
+          meta: `Cross-track correlation: BP + Flow both flagged`,
+        });
+      }
+    }
+
+    // ── Sort: critical first, then warning, advisory, clear ──────────
+    const order = { critical: 0, warning: 1, advisory: 2, clear: 3 };
+    alerts.sort((a, b) => (order[a.severity] || 9) - (order[b.severity] || 9));
+
+    return alerts;
+  }
+
+  // ── Render alert panel ─────────────────────────────────────────────
+  function renderAlerts(alerts) {
+    const list    = document.getElementById('alertList');
+    const bar     = document.getElementById('masterAlarmBar');
+    const barText = document.getElementById('masterAlarmText');
+    const badge   = document.getElementById('alertCountBadge');
+
+    // Master alarm bar — only for critical alerts
+    const criticals = alerts.filter(a => a.severity === 'critical');
+    if (criticals.length) {
+      bar.classList.add('visible');
+      barText.textContent = criticals.length === 1
+        ? criticals[0].title
+        : `${criticals.length} CRITICAL ALERTS ACTIVE`;
+    } else {
+      bar.classList.remove('visible');
+    }
+
+    // Badge count
+    const nonClear = alerts.filter(a => a.severity !== 'clear');
+    if (nonClear.length) {
+      badge.textContent = nonClear.length;
+      badge.classList.add('visible');
+    } else {
+      badge.classList.remove('visible');
+    }
+
+    // Render cards
+    if (!alerts.length) {
+      list.innerHTML = `<div class="all-clear">
+        <div class="all-clear-icon">✓</div>
+        ALL SYSTEMS NOMINAL — NO ALERTS AT THIS TIME
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = alerts.map(a => {
+      const countdownHTML = a.showCountdown
+        ? `<div class="nsaid-countdown"><span class="nsaid-clock">⧗</span> ${a.hoursLeft}h REMAINING IN INTERFERENCE WINDOW</div>`
+        : '';
+      return `<div class="alert-card ${a.severity}">
+        <div class="alert-pip"></div>
+        <div class="alert-body">
+          <div class="alert-title">${a.title}</div>
+          <div class="alert-msg">${a.msg}</div>
+          ${a.meta ? `<div class="alert-meta">${a.meta}</div>` : ''}
+          ${countdownHTML}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Full alert refresh (called after every save + on load) ─────────
+  function refreshAlerts() {
+    const history = getCheckins();
+    const alerts  = runAlertEngine(history);
+    renderAlerts(alerts);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  FADER LOGIC
+  // ═══════════════════════════════════════════════════════════════════
+  function updateRailFill(railEl, val, min, max, isFlow) {
+    const pct = ((val - min) / (max - min)) * 100;
+    if (isFlow) {
+      railEl.style.background = `linear-gradient(to top,
+        #ff3b30 0%, #ffaa00 40%, #39d98a ${pct}%,
+        #222228 ${pct}%, #222228 100%)`;
+    } else {
+      railEl.style.background = `linear-gradient(to top,
+        #39d98a 0%, #ffaa00 ${Math.min(pct, 50)}%,
+        #ff3b30 ${pct}%, #222228 ${pct}%, #222228 100%)`;
+    }
+  }
+
+  function onFlowChange(val) {
+    val = parseInt(val);
+    const t = (val - 2) / 8;
+    const color = t < 0.35 ? '#ff3b30' : t < 0.65 ? '#ffaa00' : '#39d98a';
+    const el = document.getElementById('flowDisplay');
+    el.textContent = val + '.0';
+    el.style.color = color;
+    el.style.textShadow = `0 0 14px ${color}88`;
+    document.getElementById('flowDesc').textContent = FLOW_SHORT[val] || '';
+    updateRailFill(document.getElementById('flowRail'), val, 2, 10, true);
+  }
+
+  function onPainChange(val) {
+    val = parseInt(val);
+    const t = (val - 2) / 8;
+    const color = t < 0.35 ? '#39d98a' : t < 0.65 ? '#ffaa00' : '#ff3b30';
+    const el = document.getElementById('painDisplay');
+    el.textContent = val + '.0';
+    el.style.color = color;
+    el.style.textShadow = `0 0 14px ${color}88`;
+    document.getElementById('painDesc').textContent = PAIN_SHORT[val] || '';
+    updateRailFill(document.getElementById('painRail'), val, 2, 10, false);
+  }
+
+  function buildTicks(containerId, min, max) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = '';
+    const trackH = 200;
+    for (let v = max; v >= min; v--) {
+      const pct  = (v - min) / (max - min);
+      const pos  = (1 - pct) * trackH;
+      const tick = document.createElement('div');
+      const isMajor = (v === min || v === max || v === Math.round((min + max) / 2));
+      tick.className = 'fader-tick' + (isMajor ? ' major' : '');
+      tick.style.top = pos + 'px';
+      el.appendChild(tick);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  NIGHT TRIPS
+  // ═══════════════════════════════════════════════════════════════════
+  function buildTripButtons() {
+    const row = document.getElementById('tripRow');
+    row.innerHTML = '';
+    for (let i = 0; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.className   = 'trip-btn' + (i === nightTrips ? ' active' : '');
+      btn.textContent = i === 5 ? '5+' : String(i);
+      btn.onclick     = () => { nightTrips = i; buildTripButtons(); };
+      row.appendChild(btn);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  NSAID WARNING LIGHT
+  // ═══════════════════════════════════════════════════════════════════
+  function toggleNSAID() {
+    nsaidOn = !nsaidOn;
+    const btn    = document.getElementById('rescueBtn');
+    const status = document.getElementById('rescueStatus');
+    const warn   = document.getElementById('nsaidWarning');
+    btn.classList.toggle('active', nsaidOn);
+    btn.setAttribute('aria-pressed', nsaidOn);
+    status.textContent = nsaidOn ? 'ACTIVE — RESCUE NAPROXEN TAKEN TODAY' : 'TAP LIGHT TO ACTIVATE';
+    status.classList.toggle('active', nsaidOn);
+    warn.style.display = nsaidOn ? 'block' : 'none';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  BP LIVE READOUT
+  // ═══════════════════════════════════════════════════════════════════
+  function updateBPReadout() {
+    const sys = parseInt(document.getElementById('systolic').value)  || null;
+    const dia = parseInt(document.getElementById('diastolic').value) || null;
+    const disp = document.getElementById('bpDisplay');
+    const tag  = document.getElementById('bpStatus');
+    disp.textContent = (sys && dia) ? `${sys} / ${dia}` : '— / —';
+    if (!sys || !dia) {
+      tag.textContent = 'AWAITING INPUT'; tag.className = 'bp-tag empty';
+    } else if (sys <= THRESH.bp.normalSys && dia <= THRESH.bp.normalDia) {
+      tag.textContent = 'NORMAL';         tag.className = 'bp-tag normal';
+    } else if (sys <= THRESH.bp.targetSys && dia <= THRESH.bp.targetDia) {
+      tag.textContent = 'TARGET RANGE';   tag.className = 'bp-tag target';
+    } else {
+      tag.textContent = 'ELEVATED';       tag.className = 'bp-tag high';
+    }
+  }
+  document.getElementById('systolic').addEventListener('input',  updateBPReadout);
+  document.getElementById('diastolic').addEventListener('input', updateBPReadout);
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  SUBMIT
+  // ═══════════════════════════════════════════════════════════════════
+  function submitCheckin() {
+    const sys  = parseInt(document.getElementById('systolic').value)  || null;
+    const dia  = parseInt(document.getElementById('diastolic').value) || null;
+    const hr   = parseInt(document.getElementById('heartRate').value) || null;
+    const flow = parseInt(document.getElementById('flowSlider').value);
+    const pain = parseInt(document.getElementById('painSlider').value);
+
+    const entry = {
+      timestamp:       new Date().toISOString(),
+      blood_pressure:  { systolic: sys, diastolic: dia, heart_rate: hr },
+      urinary_health:  { night_trips: nightTrips, flow_score: flow },
+      pain_management: { knee_pain_level: pain, nsaid_rescue_taken: nsaidOn },
+      metadata:        { device: navigator.userAgent || 'unknown' }
+    };
+
+    const checkins = getCheckins();
+    checkins.push(entry);
+    saveCheckins(checkins);
+
+    // Reset form
+    document.getElementById('systolic').value  = '';
+    document.getElementById('diastolic').value = '';
+    document.getElementById('heartRate').value = '';
+    document.getElementById('flowSlider').value = 2;
+    document.getElementById('painSlider').value = 2;
+    onFlowChange(2); onPainChange(2);
+    nightTrips = 0; buildTripButtons();
+    if (nsaidOn) toggleNSAID();
+    updateBPReadout();
+
+    refreshUI();
+    refreshAlerts();
+    showToast('CHECK-IN LOGGED ✓', 'success');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  HELPERS & DATA ENGINE
+  // ═══════════════════════════════════════════════════════════════════
+  function getCheckins() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+  function saveCheckins(arr) { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'show ' + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.className = ''; }, 3200);
+  }
+
+  function formatTimestamp(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month:'short', day:'numeric' })
+      + ' ' + d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+  }
+  function bytesToKB(b) { return (b / 1024).toFixed(1) + ' KB'; }
+
+  function refreshUI() {
+    const checkins = getCheckins();
+    document.getElementById('entryCount').textContent = checkins.length;
+    document.getElementById('lastEntry').textContent  =
+      checkins.length ? formatTimestamp(checkins[checkins.length - 1].timestamp) : '—';
+    const raw = localStorage.getItem(STORAGE_KEY) || '';
+    document.getElementById('storageSize').textContent = bytesToKB(new Blob([raw]).size);
+
+    const wrap = document.getElementById('logWrap');
+    if (!checkins.length) {
+      wrap.innerHTML = '<div class="log-empty">NO ENTRIES — FILL CONSOLE ABOVE &amp; LOG CHECK-IN</div>';
+      return;
+    }
+    wrap.innerHTML = [...checkins].reverse().slice(0, 12).map(entry => {
+      const bp = entry.blood_pressure;
+      const u  = entry.urinary_health;
+      const p  = entry.pain_management;
+      const bpStr   = (bp.systolic && bp.diastolic)
+        ? `<span class="hi">${bp.systolic}/${bp.diastolic}</span>` : '<span style="color:var(--muted)">BP:—</span>';
+      const flowStr = `FL<span class="${u.flow_score >= 7 ? 'ok' : u.flow_score >= 4 ? '' : 'warn'}">${u.flow_score}</span>`;
+      const painStr = `PN<span class="${p.knee_pain_level >= 7 ? 'red' : 'ok'}">${p.knee_pain_level}</span>`;
+      const nsaid   = p.nsaid_rescue_taken ? ' · <span class="warn">NSAID⚑</span>' : '';
+      return `<div class="log-entry">
+        <span class="log-ts">${formatTimestamp(entry.timestamp)}</span>
+        <span class="log-data">${bpStr} · ${flowStr} · ${painStr}${nsaid}</span>
+      </div>`;
+    }).join('');
+  }
+
+  async function exportJSON() {
+    const checkins = getCheckins();
+    if (!checkins.length) { showToast('NO DATA TO EXPORT', 'error'); return; }
+    const jsonStr  = JSON.stringify(checkins, null, 2);
+    const blob     = new Blob([jsonStr], { type: 'application/json' });
+    const date     = new Date().toISOString().slice(0, 10);
+    const fileName = `vitals_mixer_backup_${date}.json`;
+    if (navigator.share && navigator.canShare) {
+      const file = new File([blob], fileName, { type: 'application/json' });
+      if (navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ title: 'Vitals Mixer Backup', text: `${checkins.length} check-ins — ${date}`, files: [file] });
+          showToast('SHARED SUCCESSFULLY ✓', 'success'); return;
+        } catch (err) { if (err.name === 'AbortError') return; }
+      }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = fileName; a.click();
+    URL.revokeObjectURL(url);
+    showToast(`DOWNLOADED ${checkins.length} ENTRIES`, 'success');
+  }
+
+  function importJSON(event) {
+    const file = event.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        if (!Array.isArray(parsed)) throw new Error('Expected array of check-ins.');
+        const valid = parsed.filter(i => i && i.timestamp);
+        if (!valid.length) throw new Error('No valid entries found.');
+        const existing = getCheckins();
+        const ts = new Set(existing.map(c => c.timestamp));
+        const newE = valid.filter(c => !ts.has(c.timestamp));
+        const merged = [...existing, ...newE].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        saveCheckins(merged);
+        refreshUI();
+        refreshAlerts();
+        showToast(`IMPORTED ${newE.length} ENTRIES`, 'success');
+      } catch(err) { showToast('IMPORT FAILED: ' + err.message, 'error'); }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function seedSampleEntry() {
+    const nsaid = Math.random() < 0.25;
+    const s = {
+      timestamp: new Date().toISOString(),
+      blood_pressure:  { systolic: 118+Math.floor(Math.random()*22), diastolic: 74+Math.floor(Math.random()*14), heart_rate: 60+Math.floor(Math.random()*22) },
+      urinary_health:  { night_trips: Math.floor(Math.random()*3), flow_score: 3+Math.floor(Math.random()*7) },
+      pain_management: { knee_pain_level: 2+Math.floor(Math.random()*7), nsaid_rescue_taken: nsaid },
+      metadata:        { device: navigator.userAgent || 'unknown' }
+    };
+    const c = getCheckins(); c.push(s); saveCheckins(c);
+    refreshUI(); refreshAlerts();
+    showToast('SAMPLE ENTRY ADDED', 'success');
+  }
+
+  function clearAllData() {
+    const count = getCheckins().length;
+    if (!count) { showToast('NOTHING TO CLEAR', ''); return; }
+    if (!confirm(`Delete all ${count} entries? This cannot be undone.\n\nTip: Export a backup first.`)) return;
+    localStorage.removeItem(STORAGE_KEY);
+    refreshUI(); refreshAlerts();
+    showToast('ALL DATA CLEARED', 'error');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  //  INIT
+  // ═══════════════════════════════════════════════════════════════════
+  buildTicks('flowTicks', 2, 10);
+  buildTicks('painTicks', 2, 10);
+  buildTripButtons();
+  onFlowChange(2);
+  onPainChange(2);
+  refreshUI();
+  refreshAlerts();
+</script>
+</body>
+</html>
