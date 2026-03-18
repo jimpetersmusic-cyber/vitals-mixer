@@ -1,1 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background panel — dark studio aluminum -->
+  <rect width="512" height="512" rx="112" fill="#161619"/>
 
+  <!-- Inner panel inset shadow -->
+  <rect x="18" y="18" width="476" height="476" rx="98" fill="none" stroke="#2e2e38" stroke-width="2"/>
+
+  <!-- Subtle grid texture lines (horizontal) -->
+  <line x1="60" y1="170" x2="452" y2="170" stroke="#1f1f24" stroke-width="1"/>
+  <line x1="60" y1="220" x2="452" y2="220" stroke="#1f1f24" stroke-width="1"/>
+  <line x1="60" y1="270" x2="452" y2="270" stroke="#1f1f24" stroke-width="1"/>
+  <line x1="60" y1="320" x2="452" y2="320" stroke="#1f1f24" stroke-width="1"/>
+
+  <!-- "VM" monogram in Oswald-style condensed letters -->
+  <!-- V -->
+  <path d="M 112 148 L 160 340 L 208 148" 
+        fill="none" stroke="#00d9c8" stroke-width="22" 
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- M -->
+  <path d="M 232 340 L 232 148 L 288 270 L 344 148 L 344 340" 
+        fill="none" stroke="#00d9c8" stroke-width="22" 
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Heartbeat / pulse line below the monogram — the health signal -->
+  <polyline 
+    points="60,400  130,400  155,370  175,430  200,385  220,415  240,400  452,400"
+    fill="none" stroke="#39d98a" stroke-width="8"
+    stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Teal glow dot on the pulse peak — the "signal" indicator -->
+  <circle cx="175" cy="430" r="7" fill="#39d98a" opacity="0.9"/>
+  <circle cx="175" cy="430" r="14" fill="#39d98a" opacity="0.2"/>
+</svg>
